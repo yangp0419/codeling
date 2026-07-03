@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+out
+.next
+coverage
+.DS_Store
+*.log
+*.local
+pnpm-debug.log*
+

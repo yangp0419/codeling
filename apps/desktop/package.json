@@ -1,0 +1,28 @@
+{
+  "name": "@codeling/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CodeLing desktop application.",
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@codeling/core": "workspace:*",
+    "@codeling/shared": "workspace:*",
+    "@vitejs/plugin-react": "^4.6.0",
+    "electron-vite": "^3.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "electron": "^37.10.3",
+    "vite": "^6.3.5"
+  }
+}
