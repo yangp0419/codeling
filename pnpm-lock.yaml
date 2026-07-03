@@ -54,6 +54,9 @@ importers:
       '@codeling/core':
         specifier: workspace:*
         version: link:../core
+      '@codeling/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       tsx:
         specifier: ^4.20.3

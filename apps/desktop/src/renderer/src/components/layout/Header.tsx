@@ -1,7 +1,11 @@
 import type { ReactElement } from "react";
 import { GearIcon, HelpIcon, LightningIcon } from "../icons";
 
-export function Header(): ReactElement {
+interface HeaderProps {
+  onOpenSettings: () => void;
+}
+
+export function Header({ onOpenSettings }: HeaderProps): ReactElement {
   return (
     <header className="app-header">
       <div className="logo-section">
@@ -11,7 +15,7 @@ export function Header(): ReactElement {
         <button className="header-btn" title="AI Fast Mode">
           <LightningIcon />
         </button>
-        <button className="header-btn" title="Settings">
+        <button className="header-btn" title="Settings" onClick={onOpenSettings}>
           <GearIcon />
         </button>
         <button className="header-btn" title="Help & Documentation">

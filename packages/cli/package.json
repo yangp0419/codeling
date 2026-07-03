@@ -7,10 +7,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@codeling/core": "workspace:*"
+    "@codeling/core": "workspace:*",
+    "@codeling/shared": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   }
 }
-

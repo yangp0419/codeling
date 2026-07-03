@@ -6,6 +6,8 @@ import { INITIAL_CONVERSATIONS } from "../data/mockConversations";
 interface ProjectContext {
   projectPath: string | null;
   scanResult: ScanProjectResult | null;
+  hasApiKey: boolean;
+  onMissingConfig: () => void;
 }
 
 interface UseChatResult {
@@ -38,24 +40,29 @@ export function useChat(): UseChatResult {
     );
   }, [conversations, activeChatId]);
 
-  function sendMessage({ projectPath, scanResult }: ProjectContext): void {
+  function sendMessage({ projectPath, scanResult, hasApiKey, onMissingConfig }: ProjectContext): void {
     if (!inputText.trim()) return;
+    if (!hasApiKey) {
+      onMissingConfig();
+      return;
+    }
+
     const userMsgText = inputText;
     setInputText("");
+    const conversationId = activeChatId;
+    const conversation = activeConversation;
+    const userMessage = {
+      id: `u-${Date.now()}`,
+      sender: "user" as const,
+      content: userMsgText
+    };
 
     setConversations((prev) =>
       prev.map((c) => {
-        if (c.id === activeChatId) {
+        if (c.id === conversationId) {
           return {
             ...c,
-            messages: [
-              ...c.messages,
-              {
-                id: `u-${Date.now()}`,
-                sender: "user" as const,
-                content: userMsgText
-              }
-            ]
+            messages: [...c.messages, userMessage]
           };
         }
         return c;
@@ -64,36 +71,59 @@ export function useChat(): UseChatResult {
 
     setIsResponding(true);
 
-    setTimeout(() => {
+    void window.codeling
+      .sendChatMessage({
+        messages: [...conversation.messages, userMessage].map((message) => ({
+          role: message.sender === "assistant" ? "assistant" : "user",
+          content: message.content
+        })),
+        projectContext: projectPath && scanResult ? scanResult : null
+      })
+      .then((response) => {
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id === conversationId) {
+              return {
+                ...c,
+                messages: [
+                  ...c.messages,
+                  {
+                    id: `a-${Date.now()}`,
+                    sender: "assistant" as const,
+                    aiLabel: "CodeLing AI",
+                    content: response.content
+                  }
+                ]
+              };
+            }
+            return c;
+          })
+        );
+      })
+      .catch((error) => {
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id === conversationId) {
+              return {
+                ...c,
+                messages: [
+                  ...c.messages,
+                  {
+                    id: `a-${Date.now()}`,
+                    sender: "assistant" as const,
+                    aiLabel: "CodeLing AI",
+                    content: `请求失败：${error instanceof Error ? error.message : "请稍后重试。"}`
+                  }
+                ]
+              };
+            }
+            return c;
+          })
+        );
+      })
+      .finally(() => {
       setIsResponding(false);
-      let replyText = "我已经理解了您的问题。我会为您查找相关资料并提供具体方案。";
-
-      if (projectPath && scanResult && scanResult.files.length > 0) {
-        if (userMsgText.toLowerCase().includes("file") || userMsgText.includes("文件") || userMsgText.includes("项目")) {
-          replyText = `我分析了您加载的项目：\`${projectPath}\`，该项目当前包含 ${scanResult.files.length} 个代码文件。我可以帮助您浏览其结构、进行重构或诊断其中某些文件的代码性能问题。`;
-        }
-      }
-
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.id === activeChatId) {
-            return {
-              ...c,
-              messages: [
-                ...c.messages,
-                {
-                  id: `a-${Date.now()}`,
-                  sender: "assistant" as const,
-                  aiLabel: "SmartFlow AI",
-                  content: replyText
-                }
-              ]
-            };
-          }
-          return c;
-        })
-      );
-    }, 1500);
+      });
   }
 
   function createNewChat(): void {

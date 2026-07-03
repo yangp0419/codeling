@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @codeling/desktop dev",
     "build": "pnpm --filter @codeling/desktop build",
-    "typecheck": "pnpm --filter @codeling/core typecheck && pnpm --filter @codeling/shared typecheck && pnpm --filter @codeling/desktop typecheck"
+    "typecheck": "pnpm --filter @codeling/core typecheck && pnpm --filter @codeling/shared typecheck && pnpm --filter @codeling/cli typecheck && pnpm --filter @codeling/desktop typecheck"
   },
   "packageManager": "pnpm@11.7.0",
   "devDependencies": {

@@ -7,6 +7,7 @@ interface ChatPanelProps {
   conversation: ChatConversation;
   isResponding: boolean;
   inputText: string;
+  model: string;
   onInputChange: (value: string) => void;
   onSend: () => void;
   showToast: (text: string) => void;
@@ -16,6 +17,7 @@ export function ChatPanel({
   conversation,
   isResponding,
   inputText,
+  model,
   onInputChange,
   onSend,
   showToast
@@ -34,6 +36,7 @@ export function ChatPanel({
       <ChatMessages
         conversation={conversation}
         isResponding={isResponding}
+        model={model}
         onApplyChanges={handleApplyChanges}
         onCopyCode={handleCopyCode}
       />

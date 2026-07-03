@@ -4,6 +4,7 @@ import type { ChatConversation, TabType } from "../../types";
 import { ChatSidebar } from "../chat/ChatSidebar";
 import { FileExplorer } from "../files/FileExplorer";
 import { ExtensionsPanel } from "../extensions/ExtensionsPanel";
+import { SettingsSidebar } from "../settings/SettingsPage";
 
 interface PrimarySidebarProps {
   activeTab: TabType;
@@ -61,6 +62,8 @@ export function PrimarySidebar({
       )}
 
       {activeTab === "extensions" && <ExtensionsPanel />}
+
+      {activeTab === "settings" && <SettingsSidebar />}
     </aside>
   );
 }

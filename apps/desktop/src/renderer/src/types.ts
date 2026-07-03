@@ -1,5 +1,5 @@
 export type AppStatus = "idle" | "selecting" | "scanning" | "ready" | "error";
-export type TabType = "chat" | "files" | "extensions";
+export type TabType = "chat" | "files" | "extensions" | "settings";
 
 export interface Message {
   id: string;

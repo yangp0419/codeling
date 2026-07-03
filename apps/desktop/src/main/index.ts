@@ -1,10 +1,19 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { scanProject } from "@codeling/core";
+import {
+  createDefaultAiConfig,
+  normalizeAiConfig,
+  scanProject,
+  sendChatMessage
+} from "@codeling/core";
+import type { AiApiConfig, SendChatRequest } from "@codeling/shared";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirectory = path.dirname(currentFilePath);
+const aiConfigFileName = "ai-config.json";
 
 function createMainWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -15,7 +24,7 @@ function createMainWindow(): void {
     title: "CodeLing",
     show: false,
     webPreferences: {
-      preload: path.join(currentDirectory, "../preload/index.js"),
+      preload: getPreloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false
@@ -54,6 +63,21 @@ ipcMain.handle("project:scan", async (_event, projectPath: unknown) => {
   return scanProject(projectPath);
 });
 
+ipcMain.handle("ai:get-config", async () => {
+  return readAiConfig();
+});
+
+ipcMain.handle("ai:save-config", async (_event, config: unknown) => {
+  const normalizedConfig = normalizeAiConfig(validateAiConfig(config));
+  await saveAiConfig(normalizedConfig);
+  return normalizedConfig;
+});
+
+ipcMain.handle("ai:chat", async (_event, request: unknown) => {
+  const config = await readAiConfig();
+  return sendChatMessage(config, validateSendChatRequest(request));
+});
+
 void app.whenReady().then(() => {
   createMainWindow();
 
@@ -70,3 +94,61 @@ app.on("window-all-closed", () => {
   }
 });
 
+async function readAiConfig(): Promise<AiApiConfig> {
+  try {
+    const rawConfig = await readFile(getAiConfigPath(), "utf8");
+    return normalizeAiConfig(JSON.parse(rawConfig) as Partial<AiApiConfig>);
+  } catch {
+    return createDefaultAiConfig();
+  }
+}
+
+async function saveAiConfig(config: AiApiConfig): Promise<void> {
+  const configPath = getAiConfigPath();
+  await mkdir(path.dirname(configPath), { recursive: true });
+  await writeFile(configPath, JSON.stringify(config, null, 2), "utf8");
+}
+
+function getAiConfigPath(): string {
+  return path.join(app.getPath("userData"), aiConfigFileName);
+}
+
+function getPreloadPath(): string {
+  const esmPreloadPath = path.join(currentDirectory, "../preload/index.mjs");
+  if (existsSync(esmPreloadPath)) {
+    return esmPreloadPath;
+  }
+
+  return path.join(currentDirectory, "../preload/index.js");
+}
+
+function validateAiConfig(config: unknown): AiApiConfig {
+  if (!config || typeof config !== "object") {
+    throw new Error("API 配置无效。");
+  }
+
+  const rawConfig = config as Partial<Record<keyof AiApiConfig, unknown>>;
+
+  return {
+    baseUrl: typeof rawConfig.baseUrl === "string" ? rawConfig.baseUrl : "",
+    apiKey: typeof rawConfig.apiKey === "string" ? rawConfig.apiKey : "",
+    model: typeof rawConfig.model === "string" ? rawConfig.model : ""
+  };
+}
+
+function validateSendChatRequest(request: unknown): SendChatRequest {
+  if (!request || typeof request !== "object") {
+    throw new Error("聊天请求无效。");
+  }
+
+  const rawRequest = request as SendChatRequest;
+
+  if (!Array.isArray(rawRequest.messages)) {
+    throw new Error("聊天消息不能为空。");
+  }
+
+  return {
+    messages: rawRequest.messages,
+    projectContext: rawRequest.projectContext ?? null
+  };
+}

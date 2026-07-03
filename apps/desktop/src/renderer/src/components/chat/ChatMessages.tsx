@@ -7,6 +7,7 @@ import { MessageBubble } from "./MessageBubble";
 interface ChatMessagesProps {
   conversation: ChatConversation;
   isResponding: boolean;
+  model: string;
   onApplyChanges: () => void;
   onCopyCode: (code: string) => void;
 }
@@ -14,6 +15,7 @@ interface ChatMessagesProps {
 export function ChatMessages({
   conversation,
   isResponding,
+  model,
   onApplyChanges,
   onCopyCode
 }: ChatMessagesProps): ReactElement {
@@ -31,7 +33,7 @@ export function ChatMessages({
         </div>
         <div className="chat-meta">
           <CompassIcon />
-          <span>适用 GPT-4 Turbo 模型</span>
+          <span>当前模型：{model}</span>
         </div>
       </div>
 
